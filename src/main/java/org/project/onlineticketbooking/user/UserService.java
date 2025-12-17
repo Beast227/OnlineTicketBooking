@@ -1,14 +1,20 @@
 package org.project.onlineticketbooking.user;
 
-import jakarta.validation.Valid;
+import jakarta.transaction.Transactional;
+import org.project.onlineticketbooking.util.JwtUtil;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
+    private final JwtUtil jwtUtil;
     private UserRepository userRepository;
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     public UserResponse findByEmail(String email) {
@@ -17,7 +23,9 @@ public class UserService {
                 .map(UserResponse::from).orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    @Transactional
     public UserResponse createUser(User user) {
+        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         return UserResponse.from(user);
     }
@@ -27,7 +35,14 @@ public class UserService {
     }
 
     public UserResponse updateUser(User user) {
-        userRepository.save(user);
+        User foundUser = userRepository.findById(user.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
+        if (!user.getUserName().equals(foundUser.getUserName())) {
+            foundUser.setUserName(user.getUserName());
+        }
+        if (!user.getPassword().equals(foundUser.getPassword())) {
+            foundUser.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        }
+        userRepository.save(foundUser);
         return UserResponse.from(user);
     }
 
@@ -35,14 +50,14 @@ public class UserService {
         try{
             User foundUser = userRepository.findById(user.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
 
-            if (foundUser.getPassword().equals(user.getPassword())) {
-                return "your gayat";
+            if (bCryptPasswordEncoder.matches(user.getPassword(), foundUser.getPassword())) {
+                return jwtUtil.getJwtToken(user.getEmail());
             } else {
-                return "invalid gayat";
+                throw new RuntimeException("Invalid credentials");
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            return "invalid gayat";
+            throw new RuntimeException("Invalid credentials");
         }
     }
 
