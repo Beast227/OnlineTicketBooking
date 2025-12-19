@@ -1,11 +1,11 @@
 package org.project.onlineticketbooking.user;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+
 
 @Entity
 @Table(name="users")
@@ -21,12 +21,16 @@ public class User {
     private String password;
     private String userName;
 
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
     protected User() {}
 
-    public User(String email, String password, String userName) {
+    public User(String email, String password, String userName, Role role) {
         this.email = email;
         this.password = password;
         this.userName = userName;
+        this.role = role;
     }
 
     public String getEmail() {
@@ -51,6 +55,10 @@ public class User {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public Role getRole() {
+        return role;
     }
 
 }

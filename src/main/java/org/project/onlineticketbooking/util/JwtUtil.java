@@ -5,6 +5,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -21,10 +23,14 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String getJwtToken(String email){
+    public String getJwtToken(UserDetails userDetails){
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
+                .claim("roles", userDetails.getAuthorities()
+                        .stream().map(GrantedAuthority::getAuthority)
+                        .toList()
+                )
                 .setExpiration(new Date(System.currentTimeMillis() + 36000000))
                 .signWith(getKey())
                 .compact();

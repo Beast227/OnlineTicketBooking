@@ -23,6 +23,10 @@ public class UserService {
                 .map(UserResponse::from).orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    public User findByEmailForAuth(String email) {
+        return userRepository.findById(email).orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
     @Transactional
     public UserResponse createUser(User user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
@@ -50,8 +54,10 @@ public class UserService {
         try{
             User foundUser = userRepository.findById(user.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
 
+            UserDetailsImpl userDetails = new UserDetailsImpl(foundUser);
+
             if (bCryptPasswordEncoder.matches(user.getPassword(), foundUser.getPassword())) {
-                return jwtUtil.getJwtToken(user.getEmail());
+                return jwtUtil.getJwtToken(userDetails);
             } else {
                 throw new RuntimeException("Invalid credentials");
             }
