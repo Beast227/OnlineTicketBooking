@@ -1,6 +1,8 @@
 package org.project.onlineticketbooking.user;
 
 import jakarta.transaction.Transactional;
+import org.project.onlineticketbooking.exception.InvalidCredentials;
+import org.project.onlineticketbooking.exception.UserNotFound;
 import org.project.onlineticketbooking.util.JwtUtil;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -51,20 +53,16 @@ public class UserService {
     }
 
     public String loginUser(User user) {
-        try{
-            User foundUser = userRepository.findById(user.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
+        User foundUser = userRepository.findById(user.getEmail()).orElseThrow(() -> new UserNotFound("User not found"));
 
-            UserDetailsImpl userDetails = new UserDetailsImpl(foundUser);
-
-            if (bCryptPasswordEncoder.matches(user.getPassword(), foundUser.getPassword())) {
-                return jwtUtil.getJwtToken(userDetails);
-            } else {
-                throw new RuntimeException("Invalid credentials");
-            }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            throw new RuntimeException("Invalid credentials");
+        if (!bCryptPasswordEncoder.matches(user.getPassword(), foundUser.getPassword())) {
+            throw new InvalidCredentials("Pooped on");
         }
+
+        UserDetailsImpl userDetails = new UserDetailsImpl(foundUser);
+
+        return jwtUtil.getJwtToken(userDetails);
+
     }
 
 }

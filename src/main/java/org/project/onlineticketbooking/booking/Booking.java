@@ -2,6 +2,7 @@ package org.project.onlineticketbooking.booking;
 
 import jakarta.persistence.*;
 import org.project.onlineticketbooking.movie.Movie;
+import org.project.onlineticketbooking.user.User;
 
 @Entity
 public class Booking {
@@ -9,7 +10,10 @@ public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String email;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "email",  nullable = false)
+    private User user;
     private String date;
     private String time;
     private String seatNo;
@@ -20,9 +24,9 @@ public class Booking {
 
     protected Booking() {}
 
-    public Booking(Movie movie, String email, String date, String time, String seatNo) {
+    public Booking(Movie movie, User user, String date, String time, String seatNo) {
         this.movie = movie;
-        this.email = email;
+        this.user = user;
         this.date = date;
         this.time = time;
         this.seatNo = seatNo;
@@ -36,9 +40,7 @@ public class Booking {
         return movie;
     }
 
-    public String getEmail() {
-        return email;
-    }
+    public User getUser() { return  user; }
 
     public String getDate() {
         return date;
@@ -56,9 +58,7 @@ public class Booking {
         this.movie = movie;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public void setUser(User user) { this.user = user; }
 
     public void setDate(String date) {
         this.date = date;

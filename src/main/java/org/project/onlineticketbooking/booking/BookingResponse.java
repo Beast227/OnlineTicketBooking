@@ -11,7 +11,7 @@ public class BookingResponse {
     public BookingResponse(Booking booking) {
         this.id = booking.getId();
         this.movieTitle = booking.getMovie().getName();
-        this.email = booking.getEmail();
+        this.email = booking.getUser().getEmail();
         this.date = booking.getDate();
         this.time = booking.getTime();
         this.seatNo = booking.getSeatNo();

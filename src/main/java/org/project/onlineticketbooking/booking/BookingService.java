@@ -2,6 +2,8 @@ package org.project.onlineticketbooking.booking;
 
 import org.project.onlineticketbooking.movie.Movie;
 import org.project.onlineticketbooking.movie.MovieRepository;
+import org.project.onlineticketbooking.user.User;
+import org.project.onlineticketbooking.user.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,22 +13,26 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final MovieRepository movieRepository;
+    private final UserRepository userRepository;
 
-    public BookingService(BookingRepository bookingRepository, MovieRepository movieRepository) {
+    public BookingService(BookingRepository bookingRepository, MovieRepository movieRepository, UserRepository userRepository) {
         this.bookingRepository = bookingRepository;
         this.movieRepository = movieRepository;
+        this.userRepository = userRepository;
     }
 
     public Booking createBooking(BookingDTO booking) {
         Movie movie = movieRepository.findById(booking.getMovieId()).orElseThrow(() -> new RuntimeException("Movie Not Found"));
-        Booking newBooking = new Booking(movie, booking.getEmail(), booking.getDate(), booking.getTime(), booking.getSeatNo());
+        User user = userRepository.findById(booking.getEmail()).orElseThrow(() -> new RuntimeException("User Not Found"));
+        Booking newBooking = new Booking(movie, user, booking.getDate(), booking.getTime(), booking.getSeatNo());
         return bookingRepository.save(newBooking);
     }
 
     public Booking updateBooking(Long id, BookingDTO dto) {
         Booking booking = bookingRepository.findById(id).orElseThrow(() -> new RuntimeException("Booking Not Found"));
+        User user = userRepository.findById(dto.getEmail()).orElseThrow(() -> new RuntimeException("User Not Found"));
 
-        booking.setEmail(dto.getEmail());
+        booking.setUser(user);
         booking.setDate(dto.getDate());
         booking.setTime(dto.getTime());
         booking.setSeatNo(dto.getSeatNo());
@@ -50,7 +56,7 @@ public class BookingService {
     }
 
     public List<BookingResponse> getAllBookings(String email) {
-        return bookingRepository.findByEmail(email).stream().map(BookingResponse::new).toList();
+        return bookingRepository.findByUser_Email(email).stream().map(BookingResponse::new).toList();
     }
 
 }
